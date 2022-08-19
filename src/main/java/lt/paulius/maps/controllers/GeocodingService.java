@@ -12,7 +12,8 @@ import java.io.IOException;
 @Service
 public class GeocodingService {
 
-    public GeocodingResult getGeocodeFromAddress(String address, String apiKey) throws IOException, InterruptedException, ApiException {
+    public GeocodingResult getGeocodeFromAddress(String address, String apiKey)
+            throws IOException, InterruptedException, ApiException {
         GeoApiContext context = new GeoApiContext.Builder().apiKey(apiKey).build();
 
 //        GeocodingResult[]results = GeocodingApi.newRequest(context).components(ComponentFilter.postalCode("75002")).await();
