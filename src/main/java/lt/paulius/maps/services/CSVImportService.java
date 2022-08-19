@@ -12,7 +12,7 @@ import java.util.List;
 @Service
 public class CSVImportService {
 
-    public List<AddressByCityAndCountry> createListOfAddressByCityAndCountry(String fileName) {
+    public List<AddressByCityAndCountry> uploadListOfAddressByCityAndCountryFromCSV(String fileName) {
         List<AddressByCityAndCountry> addresses = new ArrayList<>();
         try {
             String locationOfFile = "src/main/resources/";

@@ -17,24 +17,24 @@ public class CityService {
 
     private final CityRepository cityRepository;
     private final GeocodingService geocodingService;
-    private final CSVImportService csvImportService;
 
     @Autowired
-    public CityService(CityRepository cityRepository, GeocodingService geocodingService, CSVImportService csvImportService) {
+    public CityService(CityRepository cityRepository, GeocodingService geocodingService) {
         this.cityRepository = cityRepository;
         this.geocodingService = geocodingService;
-        this.csvImportService = csvImportService;
     }
 
-    public void executeCityDataImportToDatabaseFromCSVFile(String fileName) throws IOException, InterruptedException, ApiException {
-        List<AddressByCityAndCountry> addressByCityAndCountryList = csvImportService.createListOfAddressByCityAndCountry(fileName);
+    public void executeCityDataImportToDatabaseFromCSVFile(
+            List<AddressByCityAndCountry> addressByCityAndCountryList, String apiKey)
+            throws IOException, InterruptedException, ApiException {
         for (AddressByCityAndCountry addressByCityAndCountry : addressByCityAndCountryList) {
             String address = addressByCityAndCountry.city() + ", " + addressByCityAndCountry.country();
-            saveCityByGivenAddress(address);
+            saveCityByGivenAddress(address, apiKey);
         }
     }
 
-    private void saveCityByGivenAddress(String address) throws IOException, InterruptedException, ApiException {
+    private void saveCityByGivenAddress(String address, String apiKey)
+            throws IOException, InterruptedException, ApiException {
         address = "Sarande, Albania";
         GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, );
         City city = new City(
@@ -66,7 +66,8 @@ public class CityService {
         Map<City, Double> distancesToCities = new HashMap<>();
 
         for (City city : cityList) {
-            Double distance = calculateDistanceBetweenTwoPoints(lat1, lng1, city.getGeometry().bounds.northeast.lat, city.getGeometry().bounds.northeast.lng);
+            Double distance = calculateDistanceBetweenTwoPoints(
+                    lat1, lng1, city.getGeometry().bounds.northeast.lat, city.getGeometry().bounds.northeast.lng);
             distancesToCities.put(city, distance);
         }
         SortedMap<City, Double> sortedDistancesToCities = new TreeMap<>(distancesToCities);
