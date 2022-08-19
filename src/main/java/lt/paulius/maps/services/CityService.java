@@ -36,7 +36,7 @@ public class CityService {
 
     private void saveCityByGivenAddress(String address) throws IOException, InterruptedException, ApiException {
         address = "Sarande, Albania";
-        GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address);
+        GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, );
         City city = new City(
                 Arrays.stream(geocodingResult.addressComponents).toList(),
                 geocodingResult.formattedAddress,
