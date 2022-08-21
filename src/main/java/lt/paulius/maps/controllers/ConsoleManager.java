@@ -6,6 +6,8 @@ import lt.paulius.maps.models.City;
 import lt.paulius.maps.services.CSVImportService;
 import lt.paulius.maps.services.CityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -14,7 +16,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 @Component
-public class ConsoleManager {
+public class ConsoleManager implements ApplicationRunner {
 
 
     private final CityService cityService;
@@ -27,8 +29,8 @@ public class ConsoleManager {
         this.csvImportService = csvImportService;
     }
 
-    public void turnOnConsoleManager() throws IOException, InterruptedException, ApiException {
-
+    @Override
+    public void run(ApplicationArguments applicationArguments) throws IOException, InterruptedException, ApiException {
 
         System.out.println("Do you want to upload cities from list in CSV file? Y/N");
         String answer = reader.readLine();
@@ -74,7 +76,6 @@ public class ConsoleManager {
         } else {
                 return;
             }
-
     }
     }
 }
