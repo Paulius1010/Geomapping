@@ -5,6 +5,7 @@ import lt.paulius.maps.models.AddressByCityAndCountry;
 import lt.paulius.maps.models.City;
 import lt.paulius.maps.services.CSVImportService;
 import lt.paulius.maps.services.CityService;
+import lt.paulius.maps.threading.Lock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -22,11 +23,13 @@ public class ConsoleManager implements ApplicationRunner {
     private final CityService cityService;
     private final CSVImportService csvImportService;
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    private final Lock lock;
 
     @Autowired
-    public ConsoleManager(CityService cityService, CSVImportService csvImportService) {
+    public ConsoleManager(CityService cityService, CSVImportService csvImportService, Lock lock) {
         this.cityService = cityService;
         this.csvImportService = csvImportService;
+        this.lock = lock;
     }
 
     @Override
@@ -42,12 +45,35 @@ public class ConsoleManager implements ApplicationRunner {
             System.out.println("List uploaded");
             System.out.println("Insert apiKey to upload data and save in database:");
             String apiKey = reader.readLine();
-            cityService.executeCityDataImportToDatabaseFromCSVFile(addressByCityAndCountryList, apiKey);
-            System.out.println("Cities imported");
-        } else {
+            Long startTime;
+            Long endTime;
+            while (true) {
+                System.out.println("Do you want to upload cities using single thread or multiple? (S/M)");
+                String answer2 = reader.readLine();
+                if (answer2.equalsIgnoreCase("S")) {
+                    startTime = System.currentTimeMillis();
+                    cityService.executeCityDataImportToDatabaseFromCSVFileUsingSingleThread(addressByCityAndCountryList, apiKey);
+                    endTime = System.currentTimeMillis();
+                    System.out.println("Cities imported using single thread in " + (endTime - startTime) + " ms.");
+                    turnOnSearch();
+                    return;
+                } else if (answer2.equalsIgnoreCase("M")) {
+                    startTime = System.currentTimeMillis();
+                    cityService.executeCityDataImportToDatabaseFromCSVFileUsingMultipleThreads(addressByCityAndCountryList, lock, apiKey);
+                    while (lock.getRunningThreadsNumber() > 0) {
+                        synchronized (lock) {
+                            lock.wait();
+                        }
+                    }
+                    endTime = System.currentTimeMillis();
+                    System.out.println("Cities imported using multiple threads in " + (endTime - startTime) + " ms.");
+                    turnOnSearch();
+                    return;
+                }
+            }
+        }
             turnOnSearch();
             System.out.println("Bye!");
-        }
     }
 
     private void turnOnSearch() throws IOException {

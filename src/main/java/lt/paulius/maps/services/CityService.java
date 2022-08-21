@@ -6,6 +6,8 @@ import lt.paulius.maps.controllers.GeocodingService;
 import lt.paulius.maps.models.AddressByCityAndCountry;
 import lt.paulius.maps.models.City;
 import lt.paulius.maps.repositories.CityRepository;
+import lt.paulius.maps.threading.CitySavingThread;
+import lt.paulius.maps.threading.Lock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +26,7 @@ public class CityService {
         this.geocodingService = geocodingService;
     }
 
-    public void executeCityDataImportToDatabaseFromCSVFile(
+    public void executeCityDataImportToDatabaseFromCSVFileUsingSingleThread(
             List<AddressByCityAndCountry> addressByCityAndCountryList, String apiKey)
             throws IOException, InterruptedException, ApiException {
         for (AddressByCityAndCountry addressByCityAndCountry : addressByCityAndCountryList) {
@@ -33,7 +35,15 @@ public class CityService {
         }
     }
 
-    private void saveCityByGivenAddress(String address, String apiKey)
+    public void executeCityDataImportToDatabaseFromCSVFileUsingMultipleThreads(
+            List<AddressByCityAndCountry> addressByCityAndCountryList, Lock lock, String apiKey) {
+        for (AddressByCityAndCountry addressByCityAndCountry : addressByCityAndCountryList) {
+            CitySavingThread citySavingThread = new CitySavingThread(addressByCityAndCountry, geocodingService, cityRepository, lock, apiKey);
+            citySavingThread.start();
+        }
+    }
+
+    public void saveCityByGivenAddress(String address, String apiKey)
             throws IOException, InterruptedException, ApiException {
         address = "Sarande, Albania";
         GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, );
