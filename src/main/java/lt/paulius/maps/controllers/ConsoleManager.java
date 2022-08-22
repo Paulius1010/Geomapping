@@ -49,7 +49,11 @@ public class ConsoleManager implements ApplicationRunner {
             String fileName = reader.readLine();
             List<AddressByCityAndCountry> addressByCityAndCountryList =
                     csvImportService.uploadListOfAddressByCityAndCountryFromCSV(fileName);
-            System.out.println("List uploaded");
+            if (addressByCityAndCountryList == null) {
+                System.out.println("The system cannot find the file specified");
+            } else {
+                System.out.println("List uploaded");
+            }
             System.out.println("Insert apiKey to upload data and save in database:");
             String apiKey = reader.readLine();
             askIfWantedToUseSingleOrMultiThreading(addressByCityAndCountryList, apiKey);
@@ -67,11 +71,11 @@ public class ConsoleManager implements ApplicationRunner {
                 cityService.executeCityDataImportToDatabaseFromCSVFileUsingSingleThread(addressByCityAndCountryList, apiKey);
                 endTime = System.currentTimeMillis();
                 System.out.println("Cities imported using single thread in " + (endTime - startTime) + " ms.");
-                searchLocation();
                 return;
             } else if (answer2.equalsIgnoreCase("M")) {
                 startTime = System.currentTimeMillis();
                 cityService.executeCityDataImportToDatabaseFromCSVFileUsingMultipleThreads(addressByCityAndCountryList, lock, apiKey);
+                System.out.println(" multithreading method called");
                 while (lock.getRunningThreadsNumber() > 0) {
                     synchronized (lock) {
                         lock.wait();
@@ -79,7 +83,6 @@ public class ConsoleManager implements ApplicationRunner {
                 }
                 endTime = System.currentTimeMillis();
                 System.out.println("Cities imported using multiple threads in " + (endTime - startTime) + " ms.");
-                searchLocation();
                 return;
             }
         }}

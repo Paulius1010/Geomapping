@@ -1,7 +1,9 @@
 package lt.paulius.maps.services;
 
 import com.google.maps.errors.ApiException;
+import com.google.maps.model.Bounds;
 import com.google.maps.model.GeocodingResult;
+import com.google.maps.model.LatLng;
 import lt.paulius.maps.controllers.GeocodingService;
 import lt.paulius.maps.models.AddressByCityAndCountry;
 import lt.paulius.maps.models.CityDAO;
@@ -45,14 +47,15 @@ public class CityService {
 
     public void saveCityByGivenAddress(String address, String apiKey)
             throws IOException, InterruptedException, ApiException {
-//        address = "Sarande, Albania";
         GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, apiKey);
-        CityDAO cityDAO = new CityDAO(
-                geocodingResult.formattedAddress,
-                geocodingResult.geometry,
-                geocodingResult.placeId
-        );
-        saveCity(cityDAO);
+        if (geocodingResult != null) {
+            CityDAO cityDAO = new CityDAO(
+                    geocodingResult.formattedAddress,
+                    geocodingResult.geometry,
+                    geocodingResult.placeId
+            );
+            saveCity(cityDAO);
+        }
     }
 
     public void saveCity(CityDAO cityDAO) {
@@ -62,9 +65,7 @@ public class CityService {
     }
 
     public CityDAO findCityByCoordinates(Double lat, Double lng) {
-        System.out.println("searching");
         List<CityDAO> cityDAOList = cityRepository.findAll();
-        cityDAOList.forEach(System.out::println);
         return cityDAOList.stream().filter(cityDAO ->
                                 cityDAO.getGeometry().viewport.northeast.lat >= lat
                                 && cityDAO.getGeometry().viewport.northeast.lng >= lng
@@ -74,13 +75,12 @@ public class CityService {
     }
 
     public List<CityDAO> findTenNearestCitiesByCoordinates(Double lat1, Double lng1) {
-        System.out.println("Searching the nearest ten");
         List<CityDAO> cityDAOList = cityRepository.findAll();
         Map<CityDAO, Double> distancesToCities = new HashMap<>();
 
         for (CityDAO cityDAO : cityDAOList) {
             Double distance = calculateDistanceBetweenTwoPoints(
-                    lat1, lng1, cityDAO.getGeometry().viewport.northeast.lat, cityDAO.getGeometry().viewport.northeast.lng);
+                    lat1, lng1, cityDAO.getGeometry().location.lat, cityDAO.getGeometry().location.lng);
             distancesToCities.put(cityDAO, distance);
         }
         Map<CityDAO, Double> sortedCitiesAccordingTODInstances = sortByValues(distancesToCities);
@@ -90,12 +90,6 @@ public class CityService {
     public Double calculateDistanceBetweenTwoPoints(Double lat1, Double lng1, Double lat2, Double lng2) {
         return Math.sqrt(Math.pow((lat2 - lat1), 2) + Math.pow((lng2 -  lng1), 2));
     }
-
-//    public static Map<City> getFirstEntriesToLimit(int limit, SortedMap<Double,City> sortedMap) {
-//       return sortedMap.entrySet().stream()
-//                .limit(limit)
-//                .collect(TreeMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);
-//    }
 
     public static List<CityDAO> getFirstEntriesToLimit(int limit, Map<CityDAO, Double> sortedMap) {
         return sortedMap.entrySet().stream()

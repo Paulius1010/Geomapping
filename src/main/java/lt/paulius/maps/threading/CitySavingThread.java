@@ -6,8 +6,6 @@ import lt.paulius.maps.models.AddressByCityAndCountry;
 import lt.paulius.maps.models.CityDAO;
 import lt.paulius.maps.repositories.CityRepository;
 
-import java.util.Arrays;
-
 public class CitySavingThread extends Thread {
 
     private final AddressByCityAndCountry addressByCityAndCountry;
@@ -29,21 +27,22 @@ public class CitySavingThread extends Thread {
         try {
             lock.addRunningThread();
             String address = addressByCityAndCountry.city() + ", " + addressByCityAndCountry.country();
-//            address = "Sarande, Albania";
-
             GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, apiKey);
-            CityDAO cityDAO = new CityDAO(
-                    geocodingResult.formattedAddress,
-                    geocodingResult.geometry,
-                    geocodingResult.placeId
-            );
+            if (geocodingResult != null) {
+                CityDAO cityDAO = new CityDAO(
+                        geocodingResult.formattedAddress,
+                        geocodingResult.geometry,
+                        geocodingResult.placeId
+                );
 
                 cityRepository.save(cityDAO);
+
+                synchronized (lock) {
+                    lock.notifyAll();
+                }
+            }
             lock.removeRunningThread();
 
-            synchronized (lock) {
-                lock.notify();
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
