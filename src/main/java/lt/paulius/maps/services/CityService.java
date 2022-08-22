@@ -66,10 +66,10 @@ public class CityService {
         List<CityDAO> cityDAOList = cityRepository.findAll();
         cityDAOList.forEach(System.out::println);
         return cityDAOList.stream().filter(cityDAO ->
-                        cityDAO.getGeometry().bounds.northeast.lat >= lat
-                                && cityDAO.getGeometry().bounds.southwest.lat <= lat
-                                && cityDAO.getGeometry().bounds.northeast.lng >= lng
-                                && cityDAO.getGeometry().bounds.southwest.lng <= lng)
+                                cityDAO.getGeometry().viewport.northeast.lat >= lat
+                                && cityDAO.getGeometry().viewport.northeast.lng >= lng
+                                && cityDAO.getGeometry().viewport.southwest.lat <= lat
+                                && cityDAO.getGeometry().viewport.southwest.lng <= lng)
                 .findFirst().orElse(null);
     }
 
