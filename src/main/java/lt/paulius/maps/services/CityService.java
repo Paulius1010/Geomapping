@@ -67,11 +67,14 @@ public class CityService {
         cityDAOList.forEach(System.out::println);
         return cityDAOList.stream().filter(cityDAO ->
                         cityDAO.getGeometry().bounds.northeast.lat >= lat
-                                && cityDAO.getGeometry().bounds.northeast.lng <= lng)
+                                && cityDAO.getGeometry().bounds.southwest.lat <= lat
+                                && cityDAO.getGeometry().bounds.northeast.lng >= lng
+                                && cityDAO.getGeometry().bounds.southwest.lng <= lng)
                 .findFirst().orElse(null);
     }
 
     public List<CityDAO> findTenNearestCitiesByCoordinates(Double lat1, Double lng1) {
+        System.out.println("Searching the nearest ten");
         List<CityDAO> cityDAOList = cityRepository.findAll();
         Map<CityDAO, Double> distancesToCities = new HashMap<>();
 

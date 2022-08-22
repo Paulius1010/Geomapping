@@ -38,6 +38,7 @@ public class ConsoleManager implements ApplicationRunner {
         uploadCitiesFromCSV();
         searchLocation();
         System.out.println("Bye!");
+        System.exit(0);
     }
 
     private void uploadCitiesFromCSV() throws IOException, InterruptedException, ApiException {
