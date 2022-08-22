@@ -80,7 +80,7 @@ public class CityService {
 
         for (CityDAO cityDAO : cityDAOList) {
             Double distance = calculateDistanceBetweenTwoPoints(
-                    lat1, lng1, cityDAO.getGeometry().bounds.northeast.lat, cityDAO.getGeometry().bounds.northeast.lng);
+                    lat1, lng1, cityDAO.getGeometry().viewport.northeast.lat, cityDAO.getGeometry().viewport.northeast.lng);
             distancesToCities.put(cityDAO, distance);
         }
         Map<CityDAO, Double> sortedCitiesAccordingTODInstances = sortByValues(distancesToCities);
