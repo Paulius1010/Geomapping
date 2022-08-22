@@ -4,7 +4,7 @@ import com.google.maps.errors.ApiException;
 import com.google.maps.model.GeocodingResult;
 import lt.paulius.maps.controllers.GeocodingService;
 import lt.paulius.maps.models.AddressByCityAndCountry;
-import lt.paulius.maps.models.City;
+import lt.paulius.maps.models.CityDAO;
 import lt.paulius.maps.repositories.CityRepository;
 import lt.paulius.maps.threading.CitySavingThread;
 import lt.paulius.maps.threading.Lock;
@@ -47,40 +47,41 @@ public class CityService {
             throws IOException, InterruptedException, ApiException {
 //        address = "Sarande, Albania";
         GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, apiKey);
-        City city = new City(
-                Arrays.stream(geocodingResult.addressComponents).toList(),
+        CityDAO cityDAO = new CityDAO(
                 geocodingResult.formattedAddress,
                 geocodingResult.geometry,
-                geocodingResult.placeId,
-                Arrays.stream(geocodingResult.types).toList()
+                geocodingResult.placeId
         );
-        saveCity(city);
+        saveCity(cityDAO);
     }
 
-    public void saveCity(City city) {
-        if (city != null) {
-            cityRepository.save(city);
+    public void saveCity(CityDAO cityDAO) {
+        if (cityDAO != null) {
+            cityRepository.save(cityDAO);
         }
     }
 
-    public City findCityByCoordinates(Double lat, Double lng) {
-        return cityRepository.findAll().stream().filter(city ->
-                        city.getGeometry().bounds.northeast.lat >= lat
-                                && city.getGeometry().bounds.northeast.lng <= lng)
+    public CityDAO findCityByCoordinates(Double lat, Double lng) {
+        System.out.println("searching");
+        List<CityDAO> cityDAOList = cityRepository.findAll();
+        cityDAOList.forEach(System.out::println);
+        return cityDAOList.stream().filter(cityDAO ->
+                        cityDAO.getGeometry().bounds.northeast.lat >= lat
+                                && cityDAO.getGeometry().bounds.northeast.lng <= lng)
                 .findFirst().orElse(null);
     }
 
-    public List<City> findTenNearestCitiesByCoordinates(Double lat1, Double lng1) {
-        List<City> cityList = cityRepository.findAll();
-        Map<City, Double> distancesToCities = new HashMap<>();
+    public List<CityDAO> findTenNearestCitiesByCoordinates(Double lat1, Double lng1) {
+        List<CityDAO> cityDAOList = cityRepository.findAll();
+        Map<CityDAO, Double> distancesToCities = new HashMap<>();
 
-        for (City city : cityList) {
+        for (CityDAO cityDAO : cityDAOList) {
             Double distance = calculateDistanceBetweenTwoPoints(
-                    lat1, lng1, city.getGeometry().bounds.northeast.lat, city.getGeometry().bounds.northeast.lng);
-            distancesToCities.put(city, distance);
+                    lat1, lng1, cityDAO.getGeometry().bounds.northeast.lat, cityDAO.getGeometry().bounds.northeast.lng);
+            distancesToCities.put(cityDAO, distance);
         }
-        SortedMap<City, Double> sortedDistancesToCities = new TreeMap<>(distancesToCities);
-        return getFirstEntriesToLimit(10, sortedDistancesToCities);
+        Map<CityDAO, Double> sortedCitiesAccordingTODInstances = sortByValues(distancesToCities);
+        return getFirstEntriesToLimit(10, sortedCitiesAccordingTODInstances);
     }
 
     public Double calculateDistanceBetweenTwoPoints(Double lat1, Double lng1, Double lat2, Double lng2) {
@@ -93,7 +94,7 @@ public class CityService {
 //                .collect(TreeMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);
 //    }
 
-    public static List<City> getFirstEntriesToLimit(int limit, SortedMap<City, Double> sortedMap) {
+    public static List<CityDAO> getFirstEntriesToLimit(int limit, Map<CityDAO, Double> sortedMap) {
         return sortedMap.entrySet().stream()
                 .limit(limit)
                 .collect(ArrayList::new, (m, e) -> m.add(e.getKey()), List::addAll);
@@ -105,6 +106,17 @@ public class CityService {
 
     public void deleteCitiesInDatabase() {
         cityRepository.deleteAll();
+    }
+
+    public static <K, V extends Comparable<V>> Map<K, V>
+    sortByValues(final Map<K, V> map) {
+        Comparator<K> valueComparator =
+                Comparator.comparing(map::get);
+
+        Map<K, V> sortedByValues =
+                new TreeMap<>(valueComparator);
+        sortedByValues.putAll(map);
+        return sortedByValues;
     }
 
 }

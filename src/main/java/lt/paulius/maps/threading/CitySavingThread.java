@@ -3,7 +3,7 @@ package lt.paulius.maps.threading;
 import com.google.maps.model.GeocodingResult;
 import lt.paulius.maps.controllers.GeocodingService;
 import lt.paulius.maps.models.AddressByCityAndCountry;
-import lt.paulius.maps.models.City;
+import lt.paulius.maps.models.CityDAO;
 import lt.paulius.maps.repositories.CityRepository;
 
 import java.util.Arrays;
@@ -24,22 +24,21 @@ public class CitySavingThread extends Thread {
         this.apiKey = apiKey;
     }
 
+    @Override
     public void run() {
         try {
             lock.addRunningThread();
             String address = addressByCityAndCountry.city() + ", " + addressByCityAndCountry.country();
+//            address = "Sarande, Albania";
 
-            address = "Sarande, Albania";
             GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, apiKey);
-            City city = new City(
-                    Arrays.stream(geocodingResult.addressComponents).toList(),
+            CityDAO cityDAO = new CityDAO(
                     geocodingResult.formattedAddress,
                     geocodingResult.geometry,
-                    geocodingResult.placeId,
-                    Arrays.stream(geocodingResult.types).toList()
+                    geocodingResult.placeId
             );
 
-                cityRepository.save(city);
+                cityRepository.save(cityDAO);
             lock.removeRunningThread();
 
             synchronized (lock) {
