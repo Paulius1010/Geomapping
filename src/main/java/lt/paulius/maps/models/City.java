@@ -12,10 +12,6 @@ import java.util.List;
 @Table
 public class City implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-
     @ElementCollection
     private List<AddressComponent> addressComponents;
 
@@ -23,6 +19,7 @@ public class City implements Serializable {
 
     private Geometry geometry;
 
+    @Id
     private String placeId;
 
     @ElementCollection
@@ -38,14 +35,6 @@ public class City implements Serializable {
     }
 
     public City() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public List<AddressComponent> getAddressComponents() {
@@ -91,7 +80,6 @@ public class City implements Serializable {
     @Override
     public String toString() {
         return "GoogleCity{" +
-                "id=" + id +
                 ", addressComponents=" + addressComponents +
                 ", formattedAddress='" + formattedAddress + '\'' +
                 ", geometry=" + geometry +

@@ -45,8 +45,8 @@ public class CityService {
 
     public void saveCityByGivenAddress(String address, String apiKey)
             throws IOException, InterruptedException, ApiException {
-        address = "Sarande, Albania";
-        GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, );
+//        address = "Sarande, Albania";
+        GeocodingResult geocodingResult = geocodingService.getGeocodeFromAddress(address, apiKey);
         City city = new City(
                 Arrays.stream(geocodingResult.addressComponents).toList(),
                 geocodingResult.formattedAddress,
@@ -58,8 +58,7 @@ public class CityService {
     }
 
     public void saveCity(City city) {
-        if (city == null) {
-        } else {
+        if (city != null) {
             cityRepository.save(city);
         }
     }
@@ -98,6 +97,14 @@ public class CityService {
         return sortedMap.entrySet().stream()
                 .limit(limit)
                 .collect(ArrayList::new, (m, e) -> m.add(e.getKey()), List::addAll);
+    }
+
+    public boolean isCityDatabaseEmpty() {
+        return cityRepository.count() != 0;
+    }
+
+    public void deleteCitiesInDatabase() {
+        cityRepository.deleteAll();
     }
 
 }

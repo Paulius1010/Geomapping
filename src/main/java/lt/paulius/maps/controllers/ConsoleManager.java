@@ -26,16 +26,24 @@ public class ConsoleManager implements ApplicationRunner {
     private final Lock lock;
 
     @Autowired
-    public ConsoleManager(CityService cityService, CSVImportService csvImportService, Lock lock) {
+    public ConsoleManager(CityService cityService, CSVImportService csvImportService) {
         this.cityService = cityService;
         this.csvImportService = csvImportService;
-        this.lock = lock;
+        this.lock = new Lock();
     }
 
     @Override
     public void run(ApplicationArguments applicationArguments) throws IOException, InterruptedException, ApiException {
 
-        System.out.println("Do you want to upload cities from list in CSV file? Y/N");
+        if (cityService.isCityDatabaseEmpty()) {
+            System.out.println("Do you want to delete all cities saved in previous time? (Y to delete, any key to continue)");
+            String answer = reader.readLine();
+            if (answer.equalsIgnoreCase("Y")) {
+                cityService.deleteCitiesInDatabase();
+            }
+        }
+
+        System.out.println("Do you want to upload cities from list in CSV file? (Y to upload, any key to continue");
         String answer = reader.readLine();
         if (answer.equalsIgnoreCase("Y")) {
             System.out.println("Insert file name (file location should be src/main/resources/):");
@@ -78,7 +86,7 @@ public class ConsoleManager implements ApplicationRunner {
 
     private void turnOnSearch() throws IOException {
         while (true) {
-            System.out.println("Do you want to search city? Y/N");
+            System.out.println("Do you want to search city? (Y to search, any key to finish)");
             String answer = reader.readLine();
             if (answer.equalsIgnoreCase("Y")) {
 
