@@ -3,6 +3,7 @@ package lt.paulius.maps.models;
 import com.google.maps.model.AddressComponent;
 import com.google.maps.model.AddressType;
 import com.google.maps.model.Geometry;
+import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -10,10 +11,7 @@ import java.util.List;
 
 @Entity
 @Table
-public class City implements Serializable {
-
-    @ElementCollection
-    private List<AddressComponent> addressComponents;
+public class CityDAO implements Serializable, Comparable {
 
     private String formattedAddress;
 
@@ -22,27 +20,14 @@ public class City implements Serializable {
     @Id
     private String placeId;
 
-    @ElementCollection
-    private List<AddressType> types;
-
-    public City(List<AddressComponent> addressComponents, String formattedAddress,
-                Geometry geometry, String placeId, List<AddressType> types) {
-        this.addressComponents = addressComponents;
+    public CityDAO(String formattedAddress,
+                   Geometry geometry, String placeId) {
         this.formattedAddress = formattedAddress;
         this.geometry = geometry;
         this.placeId = placeId;
-        this.types = types;
     }
 
-    public City() {
-    }
-
-    public List<AddressComponent> getAddressComponents() {
-        return addressComponents;
-    }
-
-    public void setAddressComponents(List<AddressComponent> addressComponents) {
-        this.addressComponents = addressComponents;
+    public CityDAO() {
     }
 
     public String getFormattedAddress() {
@@ -69,22 +54,17 @@ public class City implements Serializable {
         this.placeId = placeId;
     }
 
-    public List<AddressType> getTypes() {
-        return types;
-    }
-
-    public void setTypes(List<AddressType> types) {
-        this.types = types;
-    }
-
     @Override
     public String toString() {
-        return "GoogleCity{" +
-                ", addressComponents=" + addressComponents +
+        return "City{" +
                 ", formattedAddress='" + formattedAddress + '\'' +
                 ", geometry=" + geometry +
                 ", placeId='" + placeId + '\'' +
-                ", types=" + types +
                 '}';
+    }
+
+    @Override
+    public int compareTo(@NotNull Object o) {
+        return 0;
     }
 }

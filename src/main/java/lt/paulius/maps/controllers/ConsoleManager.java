@@ -2,7 +2,7 @@ package lt.paulius.maps.controllers;
 
 import com.google.maps.errors.ApiException;
 import lt.paulius.maps.models.AddressByCityAndCountry;
-import lt.paulius.maps.models.City;
+import lt.paulius.maps.models.CityDAO;
 import lt.paulius.maps.services.CSVImportService;
 import lt.paulius.maps.services.CityService;
 import lt.paulius.maps.threading.Lock;
@@ -34,57 +34,70 @@ public class ConsoleManager implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments applicationArguments) throws IOException, InterruptedException, ApiException {
+        deleteOldImport();
+        uploadCitiesFromCSV();
+        searchLocation();
+        System.out.println("Bye!");
+        System.exit(0);
+    }
 
-        if (cityService.isCityDatabaseEmpty()) {
-            System.out.println("Do you want to delete all cities saved in previous time? (Y to delete, any key to continue)");
-            String answer = reader.readLine();
-            if (answer.equalsIgnoreCase("Y")) {
-                cityService.deleteCitiesInDatabase();
-            }
-        }
-
-        System.out.println("Do you want to upload cities from list in CSV file? (Y to upload, any key to continue");
+    private void uploadCitiesFromCSV() throws IOException, InterruptedException, ApiException {
+        System.out.println("Do you want to upload cities from list in CSV file? (Y to upload, any key to continue)");
         String answer = reader.readLine();
         if (answer.equalsIgnoreCase("Y")) {
             System.out.println("Insert file name (file location should be src/main/resources/):");
             String fileName = reader.readLine();
             List<AddressByCityAndCountry> addressByCityAndCountryList =
                     csvImportService.uploadListOfAddressByCityAndCountryFromCSV(fileName);
-            System.out.println("List uploaded");
+            if (addressByCityAndCountryList == null) {
+                System.out.println("The system cannot find the file specified");
+            } else {
+                System.out.println("List uploaded");
+            }
             System.out.println("Insert apiKey to upload data and save in database:");
             String apiKey = reader.readLine();
-            Long startTime;
-            Long endTime;
-            while (true) {
-                System.out.println("Do you want to upload cities using single thread or multiple? (S/M)");
-                String answer2 = reader.readLine();
-                if (answer2.equalsIgnoreCase("S")) {
-                    startTime = System.currentTimeMillis();
-                    cityService.executeCityDataImportToDatabaseFromCSVFileUsingSingleThread(addressByCityAndCountryList, apiKey);
-                    endTime = System.currentTimeMillis();
-                    System.out.println("Cities imported using single thread in " + (endTime - startTime) + " ms.");
-                    turnOnSearch();
-                    return;
-                } else if (answer2.equalsIgnoreCase("M")) {
-                    startTime = System.currentTimeMillis();
-                    cityService.executeCityDataImportToDatabaseFromCSVFileUsingMultipleThreads(addressByCityAndCountryList, lock, apiKey);
-                    while (lock.getRunningThreadsNumber() > 0) {
-                        synchronized (lock) {
-                            lock.wait();
-                        }
-                    }
-                    endTime = System.currentTimeMillis();
-                    System.out.println("Cities imported using multiple threads in " + (endTime - startTime) + " ms.");
-                    turnOnSearch();
-                    return;
-                }
-            }
+            askIfWantedToUseSingleOrMultiThreading(addressByCityAndCountryList, apiKey);
         }
-            turnOnSearch();
-            System.out.println("Bye!");
     }
 
-    private void turnOnSearch() throws IOException {
+    private void askIfWantedToUseSingleOrMultiThreading(List<AddressByCityAndCountry> addressByCityAndCountryList, String apiKey) throws IOException, InterruptedException, ApiException {
+        Long startTime;
+        Long endTime;
+        while (true) {
+            System.out.println("Do you want to upload cities using single thread or multiple? (S/M)");
+            String answer2 = reader.readLine();
+            if (answer2.equalsIgnoreCase("S")) {
+                startTime = System.currentTimeMillis();
+                cityService.executeCityDataImportToDatabaseFromCSVFileUsingSingleThread(addressByCityAndCountryList, apiKey);
+                endTime = System.currentTimeMillis();
+                System.out.println("Cities imported using single thread in " + (endTime - startTime) + " ms.");
+                return;
+            } else if (answer2.equalsIgnoreCase("M")) {
+                startTime = System.currentTimeMillis();
+                cityService.executeCityDataImportToDatabaseFromCSVFileUsingMultipleThreads(addressByCityAndCountryList, lock, apiKey);
+                System.out.println(" multithreading method called");
+                while (lock.getRunningThreadsNumber() > 0) {
+                    synchronized (lock) {
+                        lock.wait();
+                    }
+                }
+                endTime = System.currentTimeMillis();
+                System.out.println("Cities imported using multiple threads in " + (endTime - startTime) + " ms.");
+                return;
+            }
+        }}
+
+    private void deleteOldImport() throws IOException {
+        if (cityService.isCityDatabaseEmpty()) {
+            System.out.println("Do you want to delete all cities saved during previous import? (Y to delete, any key to continue)");
+            String answer = reader.readLine();
+            if (answer.equalsIgnoreCase("Y")) {
+                cityService.deleteCitiesInDatabase();
+            }
+        }
+    }
+
+    private void searchLocation() throws IOException {
         while (true) {
             System.out.println("Do you want to search city? (Y to search, any key to finish)");
             String answer = reader.readLine();
@@ -97,11 +110,11 @@ public class ConsoleManager implements ApplicationRunner {
             String lng = reader.readLine();
             Double longitude = Double.parseDouble(lng);
 
-            City city = cityService.findCityByCoordinates(latitude, longitude);
-            if (city != null) {
-                System.out.println("Coordinates in " + city.getFormattedAddress());
+            CityDAO cityDAO = cityService.findCityByCoordinates(latitude, longitude);
+            if (cityDAO != null) {
+                System.out.println("Coordinates in " + cityDAO.getFormattedAddress());
             } else {
-                List<City> nearestCities = cityService.findTenNearestCitiesByCoordinates(latitude, longitude);
+                List<CityDAO> nearestCities = cityService.findTenNearestCitiesByCoordinates(latitude, longitude);
                 if (!nearestCities.isEmpty()) {
                     System.out.println("Coordinates are near to these cities:");
                     nearestCities.forEach(System.out::println);
