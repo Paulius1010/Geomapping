@@ -1,6 +1,7 @@
 package lt.paulius.maps.services;
 
 import lt.paulius.maps.models.AddressByCityAndCountry;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -12,20 +13,17 @@ import java.util.List;
 @Service
 public class CSVImportService {
 
-    public List<AddressByCityAndCountry> uploadListOfAddressByCityAndCountryFromCSV(String fileName) {
+    @Value("${your.file.location}")
+    private String fileLocation;
+
+    public List<AddressByCityAndCountry> uploadListOfAddressByCityAndCountryFromCSV() {
         List<AddressByCityAndCountry> addresses = new ArrayList<>();
         try {
-            String locationOfFile = "src/main/resources/";
-            String linkToFile = locationOfFile + fileName;
-            FileReader reader = new FileReader(linkToFile);
+            FileReader reader = new FileReader(fileLocation);
             BufferedReader bufferedReader = new BufferedReader(reader);
 
-//			bufferedReader.lines().forEach(System.out::println);
-
             String line = bufferedReader.readLine();
-//			Skip first line
             line = bufferedReader.readLine();
-//			Add lines to array
             while (line != null) {
                 String[] addressLine = line.split(";");
                 String city = addressLine[0];

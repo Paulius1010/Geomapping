@@ -1,33 +1,27 @@
 package lt.paulius.maps.models;
 
-import com.google.maps.model.AddressComponent;
-import com.google.maps.model.AddressType;
-import com.google.maps.model.Geometry;
-import org.jetbrains.annotations.NotNull;
+//import com.google.maps.model.Geometry;
+
+import lt.paulius.maps.models.pojo.Geometry;
 
 import javax.persistence.*;
-import java.io.Serializable;
-import java.util.List;
 
 @Entity
-@Table
-public class CityDAO implements Serializable, Comparable {
+@Table(name = "cities")
+public class City {
 
     private String formattedAddress;
-
     private Geometry geometry;
-
     @Id
     private String placeId;
 
-    public CityDAO(String formattedAddress,
-                   Geometry geometry, String placeId) {
+    public City(String formattedAddress, Geometry geometry, String placeId) {
         this.formattedAddress = formattedAddress;
         this.geometry = geometry;
         this.placeId = placeId;
     }
 
-    public CityDAO() {
+    public City() {
     }
 
     public String getFormattedAddress() {
@@ -63,8 +57,4 @@ public class CityDAO implements Serializable, Comparable {
                 '}';
     }
 
-    @Override
-    public int compareTo(@NotNull Object o) {
-        return 0;
-    }
 }
